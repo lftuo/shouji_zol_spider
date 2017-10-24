@@ -84,59 +84,69 @@ class shouji_zol_spider(scrapy.Spider):
                     model_str += ","
                 item['type'] = model_str[0:len(model_str)-1]
             elif res == "屏幕".decode('utf-8'):
-                # 解析屏幕尺寸screen_size
-                if len(table.xpath("./tr/td/div/ul/li")[1].xpath("./span[@id='newPmVal_4']/text()")) > 0:
-                    screen_size = table.xpath("./tr/td/div/ul/li")[1].xpath("./span[@id='newPmVal_4']/text()").extract()[0]
-                elif len(table.xpath("./tr/td/div/ul/li")[1].xpath("./span[@id='newPmVal_4']/a/text()")) > 0:
-                    screen_size = table.xpath("./tr/td/div/ul/li")[1].xpath("./span[@id='newPmVal_4']/a/text()").extract()[0]
-                else:
-                    item['screen_size'] = ""
+                screen_params = table.xpath("./tr/td/div/ul/li")
+                screen_size = ""
+                screen_type = ""
+                screen_material = ""
+                resolution = ""
+                screen_other_params = ""
+                for screen_param in screen_params:
+                    name = screen_param.xpath("./*")[0].xpath("string(.)").extract()[0]
+                    value = screen_param.xpath("./*")[1].xpath("string(.)").extract()[0]
+                    if name == '主屏尺寸'.encode('utf-8'):
+                        screen_size = value
+                    elif name == '触摸屏类型'.encode('utf-8'):
+                        screen_type = value
+                    elif name == '主屏材质'.encode('utf-8'):
+                        screen_material = value
+                    elif name == '主屏分辨率'.encode('utf-8'):
+                        resolution = value
+                    elif name == '其他屏幕参数'.encode('utf-8'):
+                        screen_other_params = value
+
                 item['screen_size'] = screen_size
+                item['screen_type'] = screen_type
+                item['screen_material'] = screen_material
+                item['resolution'] = resolution
+                item['screen_other_params'] = screen_other_params
             elif res == '网络'.decode('utf-8'):
-                pass
+                network_params = table.xpath("./tr/td/div/ul/li")
+                sim = ""
+                for network_param in network_params:
+                    name = network_param.xpath("./*")[0].xpath("string(.)").extract()[0]
+                    #value = network_param.xpath("./*")[1].xpath("string(.)").extract()[0]
+                    if name == 'SIM卡'.encode('utf-8'):
+                        sims = network_param.xpath("./*")[1].xpath("./a")
+                        for s in sims:
+                            sim += s.xpath("string(.)").extract()[0]
+                            sim += ","
+                item['sim'] = sim[0:len(sim)-1]
             elif res == '硬件'.decode('utf-8'):
-                '''
-                硬件包括内容：
-                操作系统
-                用户界面
-                核心数
-                CPU型号
-                CPU频率
-                GPU型号
-                RAM容量
-                ROM容量
-                存储卡
-                扩展容量
-                电池类型
-                电池容量
-                '''
                 hardwares = table.xpath("./tr/td/div/ul/li")
-                #opreating_system = hardware[0].xpath("./*")[0].xpath("string(.)").extract()[0]
-                #print opreating_system
+                opreating_system = ""
+                core_nums = ""
+                ram = ""
+                rom = ""
+                battery = ""
                 for hardware in hardwares:
                     name = hardware.xpath("./*")[0].xpath("string(.)").extract()[0]
                     value = hardware.xpath("./*")[1].xpath("string(.)").extract()[0]
                     if name == '操作系统'.encode('utf-8'):
-                        #opreating_system = value
-                        #print opreating_system
-                        item['opreating_system'] = value
+                        opreating_system = value
                     elif name == '核心数'.encode('utf-8'):
-                        #core_nums = value
-                        #print core_nums
-                        item['core_nums'] = value
+                        core_nums = value
                     elif name == 'RAM容量'.encode('utf-8'):
-                        #ram = value
-                        #print ram
-                        item['ram'] = value
+                        ram = value
                     elif name == 'ROM容量'.encode('utf-8'):
                         rom = value
-                        #print rom
-                        item['rom'] = value
                     elif name == '电池容量'.encode('utf-8'):
-                        #battery = value
-                        #print battery
-                        item['battery'] = value
+                        battery = value
 
+                item['opreating_system'] = opreating_system
+                item['core_nums'] = core_nums
+                item['ram'] = ram
+                item['rom'] = rom
+                item['battery'] = battery
             elif res == '摄像头'.decode('utf-8'):
                 pass
 

@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import json
+import logging
 
 import MySQLdb
 from MySQLdb.cursors import DictCursor
@@ -39,10 +40,15 @@ class ShoujiZolSpiderPipeline(object):
 
     # 写入数据库中
     def _conditional_insert(self, tx, item):
-        # print item['name']
-        sql = "insert into shouji_zol_spider_data(id,title,price,opreating_system,screen_size,core_nums,ram,rom,battery,type,time,url) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        params = (item["id"],item["title"],item["price"],item["opreating_system"],item["screen_size"],item["core_nums"],item["ram"],item["rom"],item["battery"],item["type"],item['time'],item["url"])
-        tx.execute(sql, params)
+        sql = "insert into shouji_zol_spider_data(id,title,price,opreating_system,screen_size,screen_type,screen_material,resolution,screen_other_params,sim,core_nums,ram,rom,battery,type,time,url) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        try:
+            params = (item["id"],item["title"],item["price"],item["opreating_system"],item["screen_size"],item["screen_type"],item["screen_material"],item["resolution"],item['screen_other_params'],item["sim"],item["core_nums"],item["ram"],item["rom"],item["battery"],item["type"],item['time'],item["url"])
+            tx.execute(sql, params)
+        except Exception,e:
+            print '------------------------------'
+            logging.exception(e)
+            print "ERROR HERE ----",item['url']
+
 
     # 错误处理方法
     def _handle_error(self, failue, item, spider):
