@@ -22,7 +22,7 @@ class shouji_zol_spider(scrapy.Spider):
     # 爬虫的名称
     name = "zol_spider"
     start_urls = []
-    for i in range(1):
+    for i in range(1,42):
         url = "http://detail.zol.com.cn/cell_phone_index/subcate57_list_%s.html"%(i+1)
         start_urls.append(url)
 
@@ -63,33 +63,35 @@ class shouji_zol_spider(scrapy.Spider):
     def parse_param(self,response):
         item = response.meta['item']
         tables = response.xpath(".//*[@class='param-table']/table")
+        time = ""
+        type = ""
+        screen_size = ""
+        screen_type = ""
+        screen_material = ""
+        resolution = ""
+        screen_other_params = ""
+        sim = ""
+        opreating_system = ""
+        core_nums = ""
+        ram = ""
+        rom = ""
+        battery = ""
         for table in tables:
             res = table.xpath("./tr/th/text()").extract()[0]
             if res == "基本参数".decode('utf-8'):
-                # 解析上市时间time
-                time_res = table.xpath("./tr/td/div/ul/li")[0]
-                if len(time_res.xpath("./span[@id='newPmVal_1']/text()")) > 0:
-                    time = time_res.xpath("./span[@id='newPmVal_1']/text()").extract()[0]
-                elif len(time_res.xpath("./span[@id='newPmVal_1']/a/text()")) > 0:
-                    time = time_res.xpath("./span[@id='newPmVal_1']/a/text()").extract()[0]
-                else:
-                    time = ""
-                item['time'] = time
-
-                # 解析手机类型type
-                model_str = ''
-                model_reses = table.xpath("./tr/td/div/ul/li")[1].xpath("./span[@id='newPmVal_2']/a")
-                for model in model_reses:
-                    model_str += model.xpath("./text()").extract()[0]
-                    model_str += ","
-                item['type'] = model_str[0:len(model_str)-1]
+                basic_params = table.xpath("./tr/td/div/ul/li")
+                for basic_param in basic_params:
+                    name = basic_param.xpath("./*")[0].xpath("string(.)").extract()[0]
+                    value = basic_param.xpath("./*")[1].xpath("string(.)").extract()[0]
+                    if name == '上市日期'.encode('utf-8'):
+                        time = value
+                    elif name == '手机类型'.encode('utf-8'):
+                        types = basic_param.xpath("./*")[1].xpath("./a")
+                        for t in types:
+                            type += t.xpath("string(.)").extract()[0]
+                            type += ","
             elif res == "屏幕".decode('utf-8'):
                 screen_params = table.xpath("./tr/td/div/ul/li")
-                screen_size = ""
-                screen_type = ""
-                screen_material = ""
-                resolution = ""
-                screen_other_params = ""
                 for screen_param in screen_params:
                     name = screen_param.xpath("./*")[0].xpath("string(.)").extract()[0]
                     value = screen_param.xpath("./*")[1].xpath("string(.)").extract()[0]
@@ -103,15 +105,8 @@ class shouji_zol_spider(scrapy.Spider):
                         resolution = value
                     elif name == '其他屏幕参数'.encode('utf-8'):
                         screen_other_params = value
-
-                item['screen_size'] = screen_size
-                item['screen_type'] = screen_type
-                item['screen_material'] = screen_material
-                item['resolution'] = resolution
-                item['screen_other_params'] = screen_other_params
             elif res == '网络'.decode('utf-8'):
                 network_params = table.xpath("./tr/td/div/ul/li")
-                sim = ""
                 for network_param in network_params:
                     name = network_param.xpath("./*")[0].xpath("string(.)").extract()[0]
                     #value = network_param.xpath("./*")[1].xpath("string(.)").extract()[0]
@@ -120,14 +115,8 @@ class shouji_zol_spider(scrapy.Spider):
                         for s in sims:
                             sim += s.xpath("string(.)").extract()[0]
                             sim += ","
-                item['sim'] = sim[0:len(sim)-1]
             elif res == '硬件'.decode('utf-8'):
                 hardwares = table.xpath("./tr/td/div/ul/li")
-                opreating_system = ""
-                core_nums = ""
-                ram = ""
-                rom = ""
-                battery = ""
                 for hardware in hardwares:
                     name = hardware.xpath("./*")[0].xpath("string(.)").extract()[0]
                     value = hardware.xpath("./*")[1].xpath("string(.)").extract()[0]
@@ -141,14 +130,21 @@ class shouji_zol_spider(scrapy.Spider):
                         rom = value
                     elif name == '电池容量'.encode('utf-8'):
                         battery = value
-
-                item['opreating_system'] = opreating_system
-                item['core_nums'] = core_nums
-                item['ram'] = ram
-                item['rom'] = rom
-                item['battery'] = battery
             elif res == '摄像头'.decode('utf-8'):
                 pass
+        item['time'] = time
+        item['type'] = type[0:len(type) - 1]
+        item['screen_size'] = screen_size
+        item['screen_type'] = screen_type
+        item['screen_material'] = screen_material
+        item['resolution'] = resolution
+        item['screen_other_params'] = screen_other_params
+        item['sim'] = sim[0:len(sim) - 1]
+        item['opreating_system'] = opreating_system
+        item['core_nums'] = core_nums
+        item['ram'] = ram
+        item['rom'] = rom
+        item['battery'] = battery
 
         yield item
 
