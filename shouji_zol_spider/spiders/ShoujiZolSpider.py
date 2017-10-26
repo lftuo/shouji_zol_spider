@@ -4,13 +4,10 @@
 # @Time : 2017-10-24 10:21:57
 # @File : ShoujiZolSpider.py
 # @Software : PyCharm
-import re
 import urlparse
 
 import scrapy
-from scrapy import Selector
 from scrapy.crawler import CrawlerProcess
-from scrapy.http import HtmlResponse
 from scrapy.utils.project import get_project_settings
 
 from shouji_zol_spider.items import ShoujiZolSpiderItem
@@ -19,9 +16,11 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 class shouji_zol_spider(scrapy.Spider):
-    # 爬虫的名称
+    # 设置爬虫的名称
     name = "zol_spider"
+    # 设置爬取URL
     start_urls = []
+    # 42为总页数，不做爬取，直接登录http://detail.zol.com.cn/cell_phone_index/subcate57_list_1.html查看总页数
     for i in range(1,42):
         url = "http://detail.zol.com.cn/cell_phone_index/subcate57_list_%s.html"%(i+1)
         start_urls.append(url)
@@ -29,13 +28,17 @@ class shouji_zol_spider(scrapy.Spider):
     def parse(self, response):
         phones = response.xpath(".//*[@class='clearfix']/li")
         root_url = "http://detail.zol.com.cn/cell_phone_index"
-        # 爬取基本信息：详情页链接、网页商品编号、网页标题、手机价格
         for phone in phones:
+            # 解析手机详情页URL
             url = urlparse.urljoin(root_url,phone.xpath("./a/@href").extract()[0])
+            # 获取手机页面编号id
             id = phone.xpath("./@data-follow-id").extract()[0]
+            # 解析页面标题
             title = phone.xpath("./h3/a/@title").extract()[0]
+            # 解析手机价格
             price = phone.xpath("string(.//*[@class='price-type'])").extract()[0]
             item = ShoujiZolSpiderItem(url=url,id=id,title=title,price=price)
+            # 回调parse_param_url函数，获取手机详情页URL
             request = scrapy.Request(url=url, callback=self.parse_param_url)
             request.meta['item'] = item
             yield request
@@ -52,7 +55,7 @@ class shouji_zol_spider(scrapy.Spider):
             if mulu == '参数'.decode('utf-8'):
                 href = param.xpath("./a/@href").extract()[0]
                 param_url = urlparse.urljoin(item['url'],href)
-                # 解析参数表单详细信息
+                # 回调parse_param函数，解析参数表单详细信息
                 request = scrapy.Request(url=param_url, callback=self.parse_param)
                 request.meta['item'] = item
                 yield request
@@ -149,6 +152,7 @@ class shouji_zol_spider(scrapy.Spider):
         yield item
 
 if __name__ == '__main__':
+    # 启动zol_spider爬虫
     process = CrawlerProcess(get_project_settings())
     process.crawl('zol_spider')
     process.start()
