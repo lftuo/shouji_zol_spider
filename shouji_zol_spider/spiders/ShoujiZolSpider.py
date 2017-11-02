@@ -67,12 +67,10 @@ class shouji_zol_spider(scrapy.Spider):
         item = response.meta['item']
         tables = response.xpath(".//*[@class='param-table']/table")
         time = ""
-        type = ""
+        model = ""
         screen_size = ""
-        screen_type = ""
         screen_material = ""
         resolution = ""
-        screen_other_params = ""
         sim = ""
         opreating_system = ""
         core_nums = ""
@@ -91,8 +89,8 @@ class shouji_zol_spider(scrapy.Spider):
                     elif name == '手机类型'.encode('utf-8'):
                         types = basic_param.xpath("./*")[1].xpath("./a")
                         for t in types:
-                            type += t.xpath("string(.)").extract()[0]
-                            type += ","
+                            model += t.xpath("string(.)").extract()[0]
+                            model += ","
             elif res == "屏幕".decode('utf-8'):
                 screen_params = table.xpath("./tr/td/div/ul/li")
                 for screen_param in screen_params:
@@ -100,14 +98,10 @@ class shouji_zol_spider(scrapy.Spider):
                     value = screen_param.xpath("./*")[1].xpath("string(.)").extract()[0]
                     if name == '主屏尺寸'.encode('utf-8'):
                         screen_size = value
-                    elif name == '触摸屏类型'.encode('utf-8'):
-                        screen_type = value
                     elif name == '主屏材质'.encode('utf-8'):
                         screen_material = value
                     elif name == '主屏分辨率'.encode('utf-8'):
                         resolution = value
-                    elif name == '其他屏幕参数'.encode('utf-8'):
-                        screen_other_params = value
             elif res == '网络'.decode('utf-8'):
                 network_params = table.xpath("./tr/td/div/ul/li")
                 for network_param in network_params:
@@ -136,18 +130,17 @@ class shouji_zol_spider(scrapy.Spider):
             elif res == '摄像头'.decode('utf-8'):
                 pass
         item['time'] = time
-        item['type'] = type[0:len(type) - 1]
+        item['model'] = model[0:len(model) - 1]
         item['screen_size'] = screen_size
-        item['screen_type'] = screen_type
         item['screen_material'] = screen_material
         item['resolution'] = resolution
-        item['screen_other_params'] = screen_other_params
         item['sim'] = sim[0:len(sim) - 1]
         item['opreating_system'] = opreating_system
         item['core_nums'] = core_nums
         item['ram'] = ram
         item['rom'] = rom
         item['battery'] = battery
+        item['data_source'] = 'ZOL'
 
         yield item
 

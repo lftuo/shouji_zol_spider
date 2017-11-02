@@ -40,12 +40,11 @@ class ShoujiZolSpiderPipeline(object):
 
     # 写入数据库中
     def _conditional_insert(self, tx, item):
-        sql = "insert into shouji_zol_spider_data(id,title,price,opreating_system,screen_size,screen_type,screen_material,resolution,screen_other_params,sim,core_nums,ram,rom,battery,type,time,url) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        sql = "insert into shouji_zol_spider_data(id,title,price,opreating_system,screen_size,screen_material,resolution,sim,core_nums,ram,rom,battery,model,time,url,data_source) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         try:
-            params = (item["id"],item["title"],item["price"],item["opreating_system"],item["screen_size"],item["screen_type"],item["screen_material"],item["resolution"],item['screen_other_params'],item["sim"],item["core_nums"],item["ram"],item["rom"],item["battery"],item["type"],item['time'],item["url"])
+            params = (item["id"],item["title"],item["price"],item["opreating_system"],item["screen_size"],item["screen_material"],item["resolution"],item["sim"],item["core_nums"],item["ram"],item["rom"],item["battery"],item["model"],item['time'],item["url"],item["data_source"])
             tx.execute(sql, params)
         except Exception,e:
-            print '------------------------------'
             logging.exception(e)
             print "ERROR HERE ----",item['url']
 
