@@ -21,7 +21,7 @@ class shouji_zol_spider(scrapy.Spider):
     # 设置爬取URL
     start_urls = []
     # 42为总页数，不做爬取，直接登录http://detail.zol.com.cn/cell_phone_index/subcate57_list_1.html查看总页数
-    for i in range(1,42):
+    for i in range(42):
         url = "http://detail.zol.com.cn/cell_phone_index/subcate57_list_%s.html"%(i+1)
         start_urls.append(url)
 
@@ -49,6 +49,12 @@ class shouji_zol_spider(scrapy.Spider):
     def parse_param_url(self,response):
         item = response.meta['item']
         params = response.xpath(".//*[@class='nav__list clearfix']/li")
+        # 解析model
+        model = ""
+        if len(response.xpath(".//div[@class='product-model page-title clearfix']/h2[@class='product-model__alias']")) > 0:
+            model = response.xpath(".//div[@class='product-model page-title clearfix']/h2[@class='product-model__alias']/text()").extract()[0].replace('别名：','')
+        item['model'] = model
+
         for param in params:
             # 解析手机详情页面参数链接：
             mulu = param.xpath("string(./a)").extract()[0]
@@ -67,7 +73,6 @@ class shouji_zol_spider(scrapy.Spider):
         item = response.meta['item']
         tables = response.xpath(".//*[@class='param-table']/table")
         time = ""
-        model = ""
         screen_size = ""
         screen_material = ""
         resolution = ""
@@ -77,6 +82,8 @@ class shouji_zol_spider(scrapy.Spider):
         ram = ""
         rom = ""
         battery = ""
+        #print item['id'],item['url']
+
         for table in tables:
             res = table.xpath("./tr/th/text()").extract()[0]
             if res == "基本参数".decode('utf-8'):
@@ -86,11 +93,6 @@ class shouji_zol_spider(scrapy.Spider):
                     value = basic_param.xpath("./*")[1].xpath("string(.)").extract()[0]
                     if name == '上市日期'.encode('utf-8'):
                         time = value
-                    elif name == '手机类型'.encode('utf-8'):
-                        types = basic_param.xpath("./*")[1].xpath("./a")
-                        for t in types:
-                            model += t.xpath("string(.)").extract()[0]
-                            model += ","
             elif res == "屏幕".decode('utf-8'):
                 screen_params = table.xpath("./tr/td/div/ul/li")
                 for screen_param in screen_params:
@@ -130,7 +132,6 @@ class shouji_zol_spider(scrapy.Spider):
             elif res == '摄像头'.decode('utf-8'):
                 pass
         item['time'] = time
-        item['model'] = model[0:len(model) - 1]
         item['screen_size'] = screen_size
         item['screen_material'] = screen_material
         item['resolution'] = resolution
