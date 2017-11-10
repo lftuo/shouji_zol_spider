@@ -43,10 +43,13 @@ class shouji_zol_spider(scrapy.Spider):
             request.meta['item'] = item
             yield request
 
-    '''
-    获得参数手机详情页的参数URL
-    '''
     def parse_param_url(self,response):
+        '''
+        获得参数手机详情页的参数URL
+        :param response:
+        :return:
+        '''
+
         item = response.meta['item']
         params = response.xpath(".//*[@class='nav__list clearfix']/li")
         # 解析model
